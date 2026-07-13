@@ -1,5 +1,7 @@
 package agents
 
+import "process-engine/internal/memory"
+
 type ValveAgent struct {
 	name string
 	program string
@@ -11,4 +13,8 @@ func (v *ValveAgent) Name() string {
 
 func (v *ValveAgent) Program() string {
 	return v.program
+}
+
+func (v *ValveAgent) Scan(mem *memory.Memory) {
+	// valve logic
 }

@@ -14,9 +14,17 @@ type Memory struct {
 }
 
 func New() *Memory {
-	return &Memory{
-		values: make(map[string]*entry),
-	}
+	// create new memory
+	mem := &Memory{ values: make(map[string]*entry) }
+
+	// initialize with conditions for valve & tank (for now)
+	// mem.Set("Valve.Alarm", false)
+	// mem.Set("Valve.Status", "OFF")
+	// mem.Set("Valve.Vlv", nil)
+	// mem.Set("Tank.Alarm", false)
+	// mem.Set("Tank.Level", nil)
+
+	return mem
 }
 
 func (m *Memory) Values() map[string]any {

@@ -1,5 +1,7 @@
 package agents
 
+import "process-engine/internal/memory"
+
 type TankAgent struct {
 	name string
 	program string
@@ -11,4 +13,8 @@ func (t *TankAgent) Name() string {
 
 func (t *TankAgent) Program() string {
 	return t.program
+}
+
+func (t *TankAgent) Scan(mem *memory.Memory) {
+	// tank logic
 }
