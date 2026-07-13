@@ -16,7 +16,7 @@ func (i *Interpreter) Execute(inst Instruction) {
 		i.executeSet(inst)
 		i.PC++
 	case OpRead:
-		i.executeRead(inst)
+		_ = i.executeRead(inst)
 		i.PC++
 	case OpWrite:
 		i.executeWrite(inst)
@@ -35,8 +35,9 @@ func (i *Interpreter) Execute(inst Instruction) {
 func (i *Interpreter) executeSet(inst Instruction) {
 	i.Memory.Set(inst.Args[0], inst.Args[1])
 }
-func (i *Interpreter) executeRead(inst Instruction) {
-	i.Memory.Read(inst.Args[0])
+func (i *Interpreter) executeRead(inst Instruction) any {
+	value := i.Memory.Read(inst.Args[0])
+	return value
 }
 func (i *Interpreter) executeWrite(inst Instruction) {
 	i.Memory.Write(inst.Args[0], inst.Args[1])

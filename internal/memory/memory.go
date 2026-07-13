@@ -18,11 +18,11 @@ func New() *Memory {
 	mem := &Memory{ values: make(map[string]*entry) }
 
 	// initialize with conditions for valve & tank (for now)
-	// mem.Set("Valve.Alarm", false)
-	// mem.Set("Valve.Status", "OFF")
-	// mem.Set("Valve.Vlv", nil)
-	// mem.Set("Tank.Alarm", false)
-	// mem.Set("Tank.Level", nil)
+	mem.Set("Valve.Alarm", false)
+	mem.Set("Valve.Status", "OFF")
+	mem.Set("Valve.Vlv", nil)
+	mem.Set("Tank.Alarm", false)
+	mem.Set("Tank.Level", nil)
 
 	return mem
 }
@@ -55,7 +55,7 @@ func (m *Memory) Set(key string, value any) {
 	fmt.Println(message)
 }
 
-func (m *Memory) Read(key string) {
+func (m *Memory) Read(key string) any {
 	// lock entire memory to find if key exists
 	m.mu.RLock()
 	e, exists := m.values[key]
@@ -65,7 +65,7 @@ func (m *Memory) Read(key string) {
 	if !exists {
 		message := fmt.Sprintf("!ERROR: READ %s - key does not exist in memory", key)
 		fmt.Println(message)
-		return
+		return nil
 	}
 
 	// lock only entry for specific action
@@ -75,6 +75,7 @@ func (m *Memory) Read(key string) {
 
 	message := fmt.Sprintf("READ %s: %v", key, value)
 	fmt.Println(message)
+	return value
 }
 
 func (m *Memory) Write(key string, value any) {

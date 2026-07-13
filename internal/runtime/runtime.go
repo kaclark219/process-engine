@@ -4,6 +4,7 @@ import ("os"
 		"fmt")
 import "process-engine/internal/engine"
 import "process-engine/internal/loader"
+import "process-engine/internal/agents"
 
 
 // add a program model with name & path
@@ -30,6 +31,15 @@ func DiscoverPrograms() []Program {
 		})
 	}
 	return programs
+}
+
+// find programs & assign to agents, return list of agents with assigned programs
+func InitializeAgents() []agents.Agent {
+	var agentsList []agents.Agent
+	// TEMPORARY add valve.txt to valve agent & tank.txt to tank agent
+	agentsList = append(agentsList, agents.NewValveAgent("ValveAgent", "../programs/valve.txt"))
+	agentsList = append(agentsList, agents.NewTankAgent("TankAgent", "../programs/tank.txt"))
+	return agentsList
 }
 
 // add run program function that uses loader & executes instructions with interpreter
