@@ -24,7 +24,7 @@ Variables:
 - Level (`Tank.Level`)
 - Temperature (`Tank.Temperature`)
 - Pressure (`Tank.Pressure`)
-- Inflow/Outflow Rates (`Tank.Inflow` + `Outflow.Inflow`)
+- Inflow/Outflow Rates (`Tank.Inflow` + `Tank.Outflow`)
 
 Alarms:
 - High/Low Level (`Tank.Alarm.HighLevel` + `Tank.Alarm.LowLevel`)

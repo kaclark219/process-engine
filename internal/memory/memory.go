@@ -17,12 +17,12 @@ func New() *Memory {
 	// create new memory
 	mem := &Memory{ values: make(map[string]*entry) }
 
-	// initialize with conditions for valve & tank (for now)
+	// initialize with conditions for valve (for now)
+	fmt.Println("\nMEMORY INITIALIZED.")
 	mem.Set("Valve.Alarm", false)
 	mem.Set("Valve.Status", "OFF")
 	mem.Set("Valve.Vlv", nil)
-	mem.Set("Tank.Alarm", false)
-	mem.Set("Tank.Level", nil)
+	fmt.Println("")
 
 	return mem
 }
