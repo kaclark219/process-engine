@@ -1,7 +1,10 @@
 package runtime
 
-import ("os"
-		"fmt")
+import (
+	"os"
+	"fmt"
+	"process-engine/internal/memory"
+)
 import "process-engine/internal/engine"
 import "process-engine/internal/loader"
 import "process-engine/internal/agents"
@@ -34,11 +37,11 @@ func DiscoverPrograms() []Program {
 }
 
 // find programs & assign to agents, return list of agents with assigned programs
-func InitializeAgents() []agents.Agent {
+func InitializeAgents(mem *memory.Memory) []agents.Agent {
 	var agentsList []agents.Agent
 	// TEMPORARY add valve.txt to valve agent & tank.txt to tank agent
 	agentsList = append(agentsList, agents.NewValveAgent("ValveAgent", "../programs/valve.txt"))
-	agentsList = append(agentsList, agents.NewTankAgent("TankAgent", "../programs/tank.txt"))
+	agentsList = append(agentsList, agents.NewTankAgent("TankAgent", "../programs/tank.txt", mem))
 	return agentsList
 }
 

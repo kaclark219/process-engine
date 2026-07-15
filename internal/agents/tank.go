@@ -17,10 +17,10 @@ type TankAgent struct {
 
 func NewTankAgent(name string, program string, mem *memory.Memory) *TankAgent {
 	mem.Set("Tank.Level", 0)
-	mem.Set("Tank.Temperature", 0)
-	mem.Set("Tank.Pressure", 0)
-	mem.Set("Tank.Inflow", 0)
-	mem.Set("Tank.Outflow", 0)
+	mem.Set("Tank.Temperature", 50)
+	mem.Set("Tank.Pressure", 50)
+	mem.Set("Tank.Inflow", 50)
+	mem.Set("Tank.Outflow", 50)
 	return &TankAgent{name: name, program: program}
 }
 

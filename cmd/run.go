@@ -15,11 +15,12 @@ func main() {
 func run() {
 	fmt.Println("STARTING PROGRAM ...")
 	fmt.Println("")
+	
 	// init shared memory
 	mem := memory.New()
 
 	// set agents
-	agents := runtime.InitializeAgents()
+	agents := runtime.InitializeAgents(mem)
 
 	// run scans concurrently and wait for all agents to finish
 	var wg sync.WaitGroup
