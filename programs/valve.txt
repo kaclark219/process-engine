@@ -1,3 +1,0 @@
-100 SET Valve.Vlv 0
-101 WRITE Valve.Vlv 50
-102 WRITE Valve.Vlv 101
