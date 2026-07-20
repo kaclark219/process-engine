@@ -67,12 +67,12 @@ func (a *RuleAgent) Scan(memory *memory.Memory) {
 		if val, ok := valueMap["value"].(float64); ok {
 			if a.rule.Condition.Above != nil && val > *a.rule.Condition.Above {
 				fmt.Println("Rule triggered: value above", *a.rule.Condition.Above)
-			}
-			if a.rule.Condition.Below != nil && val < *a.rule.Condition.Below {
+			} else if a.rule.Condition.Below != nil && val < *a.rule.Condition.Below {
 				fmt.Println("Rule triggered: value below", *a.rule.Condition.Below)
-			}
-			if a.rule.Condition.Equals != nil && val == *a.rule.Condition.Equals {
+			} else if a.rule.Condition.Equals != nil && val == *a.rule.Condition.Equals {
 				fmt.Println("Rule triggered: value equals", *a.rule.Condition.Equals)
+			} else {
+				fmt.Println("Rule not triggered")
 			}
 		}
 	}

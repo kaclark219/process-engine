@@ -52,3 +52,19 @@ func (m *Memory) Get(key string) any {
 	}
 	return nil
 }
+
+func (m *Memory) Set(key string, value any) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if entry, exists := m.values[key]; exists {
+		entry.mu.Lock()
+		entry.value = value
+		entry.mu.Unlock()
+		return
+	}
+
+	m.values[key] = &entry{
+		value: value,
+	}
+}

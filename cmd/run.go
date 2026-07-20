@@ -1,23 +1,18 @@
 package main
 
-import (
-	"process-engine/internal/agents"
-	"process-engine/internal/engine"
-	"process-engine/internal/memory"
-)
+import ("time"
+		"process-engine/internal/runtime"
+		)
 
 func main() {
 	run()
 }
 
 func run() {
-	rule_agent := agents.NewRuleAgent("MaintainTankTemperature", "../rules/MaintainTankTemperature.yaml")
-	agents.PrintRule(*rule_agent)
+	runtime := runtime.Start()
 
-	interpreter := &engine.Interpreter{
-		Memory: memory.New(),
-		Agents: []agents.Agent{rule_agent},
+	for {
+		runtime.Tick()
+		time.Sleep(time.Second)
 	}
-
-	engine.Scan(interpreter)
 }
