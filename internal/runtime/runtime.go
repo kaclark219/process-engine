@@ -1,8 +1,8 @@
 package runtime
 
-import ("process-engine/internal/agents"
-		"process-engine/internal/engine"
+import ("process-engine/internal/engine"
 		"process-engine/internal/memory"
+		"process-engine/internal/loader"
 		"fmt"
 		"strings"
 		"time")
@@ -14,12 +14,15 @@ type Runtime struct {
 }
 
 func Start() *Runtime {
-	rule_agent := agents.NewRuleAgent("MaintainTankTemperature", "../rules/MaintainTankTemperature.yaml")
+	rule_agents, err := loader.LoadRuleAgents("../rules")
+	if err != nil {
+		panic(err)
+	}
 
 	runtime := Runtime{
 		Interpreter: engine.Interpreter{
 			Memory: memory.New(),
-			Agents: []agents.Agent{rule_agent},
+			Agents: rule_agents,
 		},
 		CurrentTick: 0,
 		CurrentTime: time.Date(2026, 7, 17, 10, 15, 0, 0, time.UTC),

@@ -9,13 +9,13 @@ type Agent interface {
 }
 
 type BaseAgent struct {
-	name    string
+	name string
 	program string
 }
 
 func NewAgent(name string, program string) *BaseAgent {
 	return &BaseAgent{
-		name:    name,
+		name: name,
 		program: program,
 	}
 }
