@@ -40,3 +40,15 @@ func New() *Memory {
 
 	return m
 }
+
+func (m *Memory) Get(key string) any {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	if entry, exists := m.values[key]; exists {
+		entry.mu.RLock()
+		defer entry.mu.RUnlock()
+		return entry.value
+	}
+	return nil
+}

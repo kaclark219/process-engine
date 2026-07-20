@@ -1,10 +1,15 @@
 package agents
-import ("os"
-		"fmt"
-		"gopkg.in/yaml.v3")
+
+import (
+	"fmt"
+	"os"
+	"process-engine/internal/memory"
+
+	"gopkg.in/yaml.v3"
+)
 
 type RuleAgent struct {
-	*Agent
+	*BaseAgent
 	rule Rule
 }
 
@@ -12,8 +17,8 @@ func NewRuleAgent(name string, rule_path string) *RuleAgent {
 	rule := ProcessRule(rule_path)
 
 	return &RuleAgent{
-		Agent: NewAgent(name, rule_path),
-		rule: rule,
+		BaseAgent: NewAgent(name, rule_path),
+		rule:      rule,
 	}
 }
 
@@ -54,6 +59,25 @@ func ProcessRule(rule_path string) Rule {
 	return rule
 }
 
+func (a *RuleAgent) Scan(memory *memory.Memory) {
+	// evaluate rule against current memory state
+	target := a.rule.Target
+	value := memory.Get(target)
+	if valueMap, ok := value.(map[string]any); ok {
+		if val, ok := valueMap["value"].(float64); ok {
+			if a.rule.Condition.Above != nil && val > *a.rule.Condition.Above {
+				fmt.Println("Rule triggered: value above", *a.rule.Condition.Above)
+			}
+			if a.rule.Condition.Below != nil && val < *a.rule.Condition.Below {
+				fmt.Println("Rule triggered: value below", *a.rule.Condition.Below)
+			}
+			if a.rule.Condition.Equals != nil && val == *a.rule.Condition.Equals {
+				fmt.Println("Rule triggered: value equals", *a.rule.Condition.Equals)
+			}
+		}
+	}
+}
+
 func PrintRule(a RuleAgent) {
 	fmt.Println("Name:", a.rule.Name)
 	fmt.Println("Enabled:", a.rule.Enabled)
@@ -70,4 +94,3 @@ func PrintRule(a RuleAgent) {
 	fmt.Println("Severity:", a.rule.Severity)
 	fmt.Println("Recommendation Message:", a.rule.Recommendation.Message)
 }
-

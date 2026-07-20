@@ -1,22 +1,29 @@
 package agents
 
+import "process-engine/internal/memory"
 
-type Agent struct {
-	name string
+type Agent interface {
+	Name() string
+	Program() string
+	Scan(memory *memory.Memory)
+}
+
+type BaseAgent struct {
+	name    string
 	program string
 }
 
-func NewAgent(name string, program string) *Agent {
-	return &Agent{
-		name: name,
+func NewAgent(name string, program string) *BaseAgent {
+	return &BaseAgent{
+		name:    name,
 		program: program,
 	}
 }
 
-func (a *Agent) Name() string {
+func (a *BaseAgent) Name() string {
 	return a.name
 }
 
-func (a *Agent) Program() string {
+func (a *BaseAgent) Program() string {
 	return a.program
 }

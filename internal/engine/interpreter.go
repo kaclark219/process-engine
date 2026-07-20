@@ -1,9 +1,17 @@
 package engine
 
-import "process-engine/internal/memory"
+import (
+	"process-engine/internal/agents"
+	"process-engine/internal/memory"
+)
 
-// hold the state of the interpreter, including memory & program counter
 type Interpreter struct {
 	Memory *memory.Memory
-	PC int
+	Agents []agents.Agent
+}
+
+func Scan(i *Interpreter) {
+	for _, agent := range i.Agents {
+		agent.Scan(i.Memory)
+	}
 }
