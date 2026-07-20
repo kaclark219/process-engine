@@ -1,6 +1,6 @@
 package memory
 
-import (
+import ("fmt"
 		"sync")
 
 type entry struct {
@@ -16,26 +16,6 @@ type Memory struct {
 func New() *Memory {
 	m := &Memory{
 		values: make(map[string]*entry),
-	}
-
-	// test values
-	m.values["process.Tank01.Temperature"] = &entry{
-		value: map[string]any{
-			"value":     45.0,
-			"timestamp": "2026-07-17T10:15:00Z",
-		},
-	}
-	m.values["process.Pump03.Flow"] = &entry{
-		value: map[string]any{
-			"value":     120.0,
-			"timestamp": "2026-07-17T10:15:00Z",
-		},
-	}
-	m.values["process.Tank02.Temperature"] = &entry{
-		value: map[string]any{
-			"value":     75.0,
-			"timestamp": "2026-07-17T10:15:00Z",
-		},
 	}
 
 	return m
@@ -66,5 +46,16 @@ func (m *Memory) Set(key string, value any) {
 
 	m.values[key] = &entry{
 		value: value,
+	}
+}
+
+func (m *Memory) Print() {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for key, entry := range m.values {
+		entry.mu.RLock()
+		fmt.Println("Key:", key, "Value:", entry.value)
+		entry.mu.RUnlock()
 	}
 }

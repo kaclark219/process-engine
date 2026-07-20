@@ -34,7 +34,7 @@ func (i *Interpreter) LoadTick(timestamp string) error {
 		i.Memory.Set(
 			key,
 			map[string]any{
-				"value":     item["value"],
+				"value": item["value"],
 				"timestamp": item["timestamp"],
 			},
 		)

@@ -43,5 +43,7 @@ func (r *Runtime) Tick() {
 		}
 	}
 
+	// r.Interpreter.Memory.Print()
+
 	r.CurrentTime = r.CurrentTime.Add(time.Minute)
 }
