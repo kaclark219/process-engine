@@ -1,12 +1,11 @@
 package runtime
 
-import (
-	"process-engine/internal/agents"
-	"process-engine/internal/engine"
-	"process-engine/internal/memory"
-)
-
-import "time"
+import ("process-engine/internal/agents"
+		"process-engine/internal/engine"
+		"process-engine/internal/memory"
+		"fmt"
+		"strings"
+		"time")
 
 type Runtime struct {
 	Interpreter engine.Interpreter
@@ -39,7 +38,13 @@ func (r *Runtime) Tick() {
 
 	if r.CurrentTick%3 == 0 {
 		for _, agent := range r.Interpreter.Agents {
-			agent.Scan(r.Interpreter.Memory)
+			alerts := agent.Scan(r.Interpreter.Memory)
+			for _, alert := range alerts {
+				fmt.Printf("[%s] [%s] %s\n", strings.ToUpper(alert.Severity), alert.RuleName, alert.Message)
+				fmt.Printf("  Target: %s\n", alert.Target)
+				fmt.Printf("  Value: %.2f\n", alert.Value)
+				fmt.Printf("  Condition: %s\n", alert.Condition)
+			}
 		}
 	}
 

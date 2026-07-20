@@ -5,7 +5,7 @@ import "process-engine/internal/memory"
 type Agent interface {
 	Name() string
 	Program() string
-	Scan(memory *memory.Memory)
+	Scan(memory *memory.Memory) []Alert
 }
 
 type BaseAgent struct {

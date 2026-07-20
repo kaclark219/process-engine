@@ -18,3 +18,12 @@ type Condition struct {
 type Recommendation struct {
 	Message string `yaml:"message"`
 }
+
+type Alert struct {
+	Severity string
+	RuleName string
+	Target string
+	Value float64
+	Condition string
+	Message string
+}

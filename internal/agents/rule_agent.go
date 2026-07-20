@@ -2,7 +2,6 @@ package agents
 
 import ("fmt"
 		"os"
-		"strings"
 		"process-engine/internal/memory"
 		"gopkg.in/yaml.v3")
 
@@ -57,32 +56,51 @@ func ProcessRule(rule_path string) Rule {
 	return rule
 }
 
-func (a *RuleAgent) Scan(memory *memory.Memory) {
+func (a *RuleAgent) Scan(memory *memory.Memory) []Alert {
 	// evaluate rule against current memory state
 	target := a.rule.Target
 	value := memory.Get(target)
 	if valueMap, ok := value.(map[string]any); ok {
 		if val, ok := valueMap["value"].(float64); ok {
 			if a.rule.Condition.Above != nil && val > *a.rule.Condition.Above {
-				fmt.Printf("[%s] [%s] %s\n", strings.ToUpper(a.rule.Severity), a.rule.Name, a.rule.Recommendation.Message)
-				fmt.Printf("  Target: %s\n", a.rule.Target)
-				fmt.Printf("  Value: %.2f\n", val)
-				fmt.Printf("  Rule: Above %.2f\n", *a.rule.Condition.Above)
+				return []Alert{
+					{
+						Severity: a.rule.Severity,
+						RuleName: a.rule.Name,
+						Target: a.rule.Target,
+						Value: val,
+						Condition: fmt.Sprintf("Above %.2f", *a.rule.Condition.Above),
+						Message: a.rule.Recommendation.Message,
+					},
+				}
 			} else if a.rule.Condition.Below != nil && val < *a.rule.Condition.Below {
-				fmt.Printf("[%s] [%s] %s\n", strings.ToUpper(a.rule.Severity), a.rule.Name, a.rule.Recommendation.Message)
-				fmt.Printf("  Target: %s\n", a.rule.Target)
-				fmt.Printf("  Value: %.2f\n", val)
-				fmt.Printf("  Rule: Below %.2f\n", *a.rule.Condition.Below)
+				return []Alert{
+					{
+						Severity: a.rule.Severity,
+						RuleName: a.rule.Name,
+						Target: a.rule.Target,
+						Value: val,
+						Condition: fmt.Sprintf("Below %.2f", *a.rule.Condition.Below),
+						Message: a.rule.Recommendation.Message,
+					},
+				}
 			} else if a.rule.Condition.Equals != nil && val == *a.rule.Condition.Equals {
-				fmt.Printf("[%s] [%s] %s\n", strings.ToUpper(a.rule.Severity), a.rule.Name, a.rule.Recommendation.Message)
-				fmt.Printf("  Target: %s\n", a.rule.Target)
-				fmt.Printf("  Value: %.2f\n", val)
-				fmt.Printf("  Rule: Equals %.2f\n", *a.rule.Condition.Equals)
+				return []Alert{
+					{
+						Severity: a.rule.Severity,
+						RuleName: a.rule.Name,
+						Target: a.rule.Target,
+						Value: val,
+						Condition: fmt.Sprintf("Equals %.2f", *a.rule.Condition.Equals),
+						Message: a.rule.Recommendation.Message,
+					},
+				}
 			} else {
 				fmt.Println("Rule not triggered")
 			}
 		}
 	}
+	return nil
 }
 
 func PrintRule(a RuleAgent) {
