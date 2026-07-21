@@ -1,20 +1,26 @@
 package runtime
 
-import ("process-engine/internal/engine"
-		"process-engine/internal/memory"
+import ("fmt"
+		"process-engine/internal/agents"
+		"process-engine/internal/engine"
 		"process-engine/internal/loader"
-		"fmt"
+		"process-engine/internal/memory"
 		"strings"
 		"time")
+
+type AlertPublisher interface {
+	PublishAlert(alert *agents.Alert)
+}
 
 type Runtime struct {
 	Interpreter engine.Interpreter
 	CurrentTick int
 	CurrentTime time.Time
+	Publisher AlertPublisher
 }
 
-func Start() *Runtime {
-	rule_agents, err := loader.LoadRuleAgents("../rules")
+func Start(rulesDir string, publisher AlertPublisher) *Runtime {
+	rule_agents, err := loader.LoadRuleAgents(rulesDir)
 	if err != nil {
 		panic(err)
 	}
@@ -26,6 +32,7 @@ func Start() *Runtime {
 		},
 		CurrentTick: 0,
 		CurrentTime: time.Date(2026, 7, 17, 10, 15, 0, 0, time.UTC),
+		Publisher: publisher,
 	}
 
 	return &runtime
@@ -47,6 +54,10 @@ func (r *Runtime) Tick() {
 				fmt.Printf("  Target: %s\n", alert.Target)
 				fmt.Printf("  Value: %.2f\n", alert.Value)
 				fmt.Printf("  Condition: %s\n", alert.Condition)
+
+				if r.Publisher != nil {
+					r.Publisher.PublishAlert(&alert)
+				}
 			}
 		}
 	}
