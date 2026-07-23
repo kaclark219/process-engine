@@ -127,6 +127,11 @@ const htmlContent = `
             border-left-color: #00573d;
             background: #7ccf8b7c;
         }
+
+        .alert-item.waiting {
+            border-left-color: #004b8d;
+            background: #e3f2ff;
+        }
         
         .alert-severity {
             font-weight: 700;
@@ -145,6 +150,10 @@ const htmlContent = `
         
         .alert-severity.advisory {
             color: #00573d;
+        }
+        
+        .alert-severity.waiting {
+            color: #004b8d;
         }
         
         .alert-rule {
@@ -249,8 +258,8 @@ const htmlContent = `
         <div class="panel">
             <h2>Real-Time Alerts</h2>
             <div class="alerts-container" id="alertsContainer">
-                <div class="alert-item advisory" id="connectingMessage">
-                    <div class="alert-severity advisory">Connecting...</div>
+                <div class="alert-item waiting" id="connectingMessage">
+                    <div class="alert-severity waiting">Connecting...</div>
                     <div class="alert-rule">Waiting for alerts</div>
                     <div class="alert-details">Connecting to alert stream...</div>
                 </div>
@@ -325,22 +334,32 @@ const htmlContent = `
                 alertsContainer.innerHTML = '';
             }
             alertCount++;
+
+            const knownSeverities = ['advisory', 'warning', 'emergency'];
+            const rawSeverity = (alert.Severity || '').toLowerCase();
+            const severityClass = knownSeverities.includes(rawSeverity) ? rawSeverity : 'waiting';
+            const severityLabel = rawSeverity ? rawSeverity.toUpperCase() : 'INFO';
             
             const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert-item ' + alert.Severity;
+            alertDiv.className = 'alert-item ' + severityClass;
             
             const timestamp = new Date().toLocaleTimeString();
             
-            const severityUpper = alert.Severity.toUpperCase();
-            const valueFixed = alert.Value.toFixed(2);
+            const valueFixed = typeof alert.Value === 'number' && Number.isFinite(alert.Value)
+                ? alert.Value.toFixed(2)
+                : 'N/A';
+            const ruleName = alert.RuleName || 'System';
+            const message = alert.Message || 'Status update';
+            const target = alert.Target || 'N/A';
+            const condition = alert.Condition || 'N/A';
             
-            alertDiv.innerHTML = '<div class="alert-severity ' + alert.Severity + '">' + severityUpper + '</div>' +
-                '<div class="alert-rule">' + alert.RuleName + '</div>' +
+            alertDiv.innerHTML = '<div class="alert-severity ' + severityClass + '">' + severityLabel + '</div>' +
+                '<div class="alert-rule">' + ruleName + '</div>' +
                 '<div class="alert-details">' +
-                '<strong>' + alert.Message + '</strong><br>' +
-                'Target: ' + alert.Target + '<br>' +
+                '<strong>' + message + '</strong><br>' +
+                'Target: ' + target + '<br>' +
                 'Current Value: ' + valueFixed + '<br>' +
-                'Condition: ' + alert.Condition + '<br>' +
+                'Condition: ' + condition + '<br>' +
                 '<em style="color: #999;">' + timestamp + '</em>' +
                 '</div>';
             

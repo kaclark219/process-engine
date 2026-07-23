@@ -48,9 +48,9 @@ func ProcessRule(rule_path string) Rule {
 	if !valid_condition {
 		panic("Rule validation failed: condition must define above, below, or equals")
 	}
-	valid_severity := rule.Severity == "advisory" || rule.Severity == "warning" || rule.Severity == "critical"
+	valid_severity := rule.Severity == "advisory" || rule.Severity == "warning" || rule.Severity == "emergency"
 	if !valid_severity {
-		panic("Rule validation failed: severity must be one of advisory, warning, or critical")
+		panic("Rule validation failed: severity must be one of advisory, warning, or emergency")
 	}
 
 	return rule

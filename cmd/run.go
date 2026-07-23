@@ -25,6 +25,8 @@ func main() {
 		}
 	}()
 
+	time.Sleep(time.Second*10)
+
 	for {
 		runtime.Tick()
 		time.Sleep(time.Second)
