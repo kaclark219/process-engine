@@ -6,6 +6,7 @@ import ("fmt"
 		"process-engine/internal/loader"
 		"process-engine/internal/memory"
 		"strings"
+		"sync"
 		"time")
 
 type AlertPublisher interface {
@@ -13,6 +14,7 @@ type AlertPublisher interface {
 }
 
 type Runtime struct {
+	mu sync.Mutex
 	Interpreter engine.Interpreter
 	CurrentTick int
 	CurrentTime time.Time
@@ -38,7 +40,15 @@ func Start(rulesDir string, publisher AlertPublisher) *Runtime {
 	return &runtime
 }
 
+func (r *Runtime) AddAgent(agent agents.Agent) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.Interpreter.Agents = append(r.Interpreter.Agents, agent)
+}
+
 func (r *Runtime) Tick() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.CurrentTick++
 
 	err := r.Interpreter.LoadTick(r.CurrentTime.Format(time.RFC3339))

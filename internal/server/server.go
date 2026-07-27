@@ -5,15 +5,20 @@ import ("encoding/json"
 		"net/http"
 		"os"
 		"path/filepath"
+		"process-engine/internal/agents"
 		"strconv"
-		"sync"
-		"process-engine/internal/agents")
+		"sync")
+
+type AgentRegistrar interface {
+	AddAgent(agent agents.Agent)
+}
 
 type Server struct {
 	mu sync.Mutex
 	alertClients map[chan *agents.Alert]bool
 	alertChan chan *agents.Alert
 	rulesDir string
+	registrar AgentRegistrar
 }
 
 func NewServer(rulesDir string) *Server {
@@ -22,6 +27,10 @@ func NewServer(rulesDir string) *Server {
 		alertChan: make(chan *agents.Alert, 100),
 		rulesDir: rulesDir,
 	}
+}
+
+func (s *Server) SetAgentRegistrar(r AgentRegistrar) {
+	s.registrar = r
 }
 
 func (s *Server) Start(addr string) error {
@@ -65,7 +74,7 @@ func (s *Server) handleCreateRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := r.ParseForm()
+	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
@@ -115,7 +124,7 @@ func (s *Server) handleCreateRule(w http.ResponseWriter, r *http.Request) {
 		Target: target,
 		Condition: condition,
 		Severity: severity,
-		Recommendation: agents.Recommendation{ Message: message },
+		Recommendation: agents.Recommendation{Message: message},
 	}
 
 	// write yaml file
@@ -124,6 +133,10 @@ func (s *Server) handleCreateRule(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to save rule: %v", err), http.StatusInternalServerError)
 		return
+	}
+
+	if s.registrar != nil {
+		s.registrar.AddAgent(agents.NewRuleAgent(name+".yaml", filePath))
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -180,15 +193,7 @@ func (s *Server) handleAlerts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) writeRuleYAML(filePath string, rule agents.Rule) error {
-	yamlContent := fmt.Sprintf(`name: %s
-		enabled: %v
-		target: %s
-		condition:
-			%s: %v
-		severity: %s
-		recommendation:
-			message: "%s"
-		`,
+	yamlContent := fmt.Sprintf("name: %s\n\nenabled: %v\n\ntarget: %s\n\ncondition:\n    %s: %v\n\nseverity: %s\n\nrecommendation:\n    message: %q\n",
 		rule.Name,
 		rule.Enabled,
 		rule.Target,
@@ -210,11 +215,11 @@ func getConditionKey(c *agents.Condition) string {
 	return "equals"
 }
 
-func getConditionValue(c *agents.Condition) string {
+func getConditionValue(c *agents.Condition) float64 {
 	if c.Above != nil {
-		return fmt.Sprintf("%.2f", *c.Above)
+		return *c.Above
 	} else if c.Below != nil {
-		return fmt.Sprintf("%.2f", *c.Below)
+		return *c.Below
 	}
-	return fmt.Sprintf("%.2f", *c.Equals)
+	return *c.Equals
 }

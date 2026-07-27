@@ -16,7 +16,8 @@ func main() {
 	rulesDir := filepath.Join(projectRoot, "rules")
 
 	srv := server.NewServer(rulesDir)
-	runtime := runtime.Start(rulesDir, srv)
+	rt := runtime.Start(rulesDir, srv)
+	srv.SetAgentRegistrar(rt)
 
 	go func() {
 		fmt.Println("Starting server on http://localhost:8080")
@@ -28,7 +29,7 @@ func main() {
 	time.Sleep(time.Second*10)
 
 	for {
-		runtime.Tick()
+		rt.Tick()
 		time.Sleep(time.Second)
 	}
 }
