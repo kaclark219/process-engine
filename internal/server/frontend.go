@@ -100,7 +100,7 @@ const htmlContent = `
         }
         
         .alerts-container {
-            max-height: 500px;
+            max-height: 80vh;
             overflow-y: auto;
         }
         
@@ -194,6 +194,30 @@ const htmlContent = `
         @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        .alert-item {
+            background: #f8f9fa;
+            border-left: 4px solid #ddd;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .alert-item.new-alert {
+            animation: alertAppear 0.5s ease-out;
+        }
+
+        @keyframes alertAppear {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
     </style>
@@ -341,7 +365,7 @@ const htmlContent = `
             const severityLabel = rawSeverity ? rawSeverity.toUpperCase() : 'INFO';
             
             const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert-item ' + severityClass;
+            alertDiv.className = 'alert-item ' + severityClass + ' new-alert';
             
             const timestamp = new Date().toLocaleTimeString();
             
@@ -364,8 +388,12 @@ const htmlContent = `
                 '</div>';
             
             alertsContainer.insertBefore(alertDiv, alertsContainer.firstChild);
+
+            alertDiv.addEventListener('animationend', () => {
+                alertDiv.classList.remove('new-alert');
+            });
             
-            // Keep only last 50 alerts
+            // keep only last 50 alerts
             while (alertsContainer.children.length > 50) {
                 alertsContainer.removeChild(alertsContainer.lastChild);
             }
