@@ -115,17 +115,22 @@ const htmlContent = `
         
         .alert-item.warning {
             border-left-color: #d6ba01;
-            background: #fff5b5;
+            background: #fff5b57e;
         }
         
         .alert-item.emergency {
             border-left-color: #e35b39;
-            background: #ffc2b2;
+            background: rgba(245, 195, 183, 0.51);
         }
         
+        // .alert-item.advisory {
+        //     border-left-color: #00573d;
+        //     background: #7ccf8b7c;
+        // }
+
         .alert-item.advisory {
-            border-left-color: #00573d;
-            background: #7ccf8b7c;
+            border-left-color: #004b8d;
+            background: #e3f2ff;
         }
 
         .alert-item.waiting {
@@ -148,8 +153,12 @@ const htmlContent = `
             color: #e35b39;
         }
         
+        // .alert-severity.advisory {
+        //     color: #00573d;
+        // }
+
         .alert-severity.advisory {
-            color: #00573d;
+            color: #004b8d;
         }
         
         .alert-severity.waiting {
