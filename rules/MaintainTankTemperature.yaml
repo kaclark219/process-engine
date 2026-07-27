@@ -1,0 +1,13 @@
+name: MaintainTankTemperature
+
+enabled: true
+
+target: process.Tank01.Temperature
+
+condition:
+    below: 50
+
+severity: warning
+
+recommendation:
+    message: "Increase heater output by 10%"

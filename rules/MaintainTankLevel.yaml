@@ -1,0 +1,13 @@
+name: LowTankLevel
+
+enabled: true
+
+target: process.Tank01.Level
+
+condition:
+    below: 75
+
+severity: emergency
+
+recommendation:
+    message: "Open inlet valve and verify supply pump operation"

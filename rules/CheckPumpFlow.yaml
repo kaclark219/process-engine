@@ -1,0 +1,13 @@
+name: CheckPumpFlow
+
+enabled: true
+
+target: process.Pump03.Flow
+
+condition:
+    above: 100
+
+severity: emergency
+
+recommendation:
+    message: "Close valve by 15 degrees"

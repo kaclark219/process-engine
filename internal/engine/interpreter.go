@@ -1,46 +1,44 @@
 package engine
 
-import "fmt"
-import "process-engine/internal/memory"
+import ("fmt"
+		"process-engine/internal/agents"
+		"process-engine/internal/memory"
+		"process-engine/internal/historian")
 
-// hold the state of the interpreter, including memory & program counter
 type Interpreter struct {
 	Memory *memory.Memory
-	PC int
+	Agents []agents.Agent
 }
 
-// determines what function to call based on opcode, then executes the instruction
-func (i *Interpreter) Execute(inst Instruction) {
-	switch inst.Opcode {
-	case OpSet:
-		i.executeSet(inst)
-		i.PC++
-	case OpRead:
-		i.executeRead(inst)
-		i.PC++
-	case OpWrite:
-		i.executeWrite(inst)
-		i.PC++
-	case OpDelete:
-		i.executeDelete(inst)
-		i.PC++
-	default:
-		// handle unknown opcode
-		message := fmt.Sprintf("Unknown opcode: %v", inst.Opcode)
-		fmt.Println(message)
+func Scan(i *Interpreter) {
+	for _, agent := range i.Agents {
+		agent.Scan(i.Memory)
 	}
 }
 
-// calls the appropriate function for each opcode, passing in the instruction arguments
-func (i *Interpreter) executeSet(inst Instruction) {
-	i.Memory.Set(inst.Args[0], inst.Args[1])
+type ProcessData struct {
+	ProcessName string
+	VariableName string
+	Value float64
+	TimestampUTC string
 }
-func (i *Interpreter) executeRead(inst Instruction) {
-	i.Memory.Read(inst.Args[0])
-}
-func (i *Interpreter) executeWrite(inst Instruction) {
-	i.Memory.Write(inst.Args[0], inst.Args[1])
-}
-func (i *Interpreter) executeDelete(inst Instruction) {
-	i.Memory.Delete(inst.Args[0])
+
+func (i *Interpreter) LoadTick(timestamp string) error {
+	data, err := historian.LoadTimestamp(timestamp)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range data {
+		key := fmt.Sprintf("process.%s.%s", item["process"], item["variable"])
+		i.Memory.Set(
+			key,
+			map[string]any{
+				"value": item["value"],
+				"timestamp": item["timestamp"],
+			},
+		)
+	}
+
+	return nil
 }
