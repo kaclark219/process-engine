@@ -1,5 +1,5 @@
 ### Rule Definition Schema
-Rules are stored in Blob Storage as JSON or YAML and loaded dynamically at runtime.
+Rules are stored as YAML files in the local `rules/` directory and loaded by the Runtime during startup. The Runtime scans the rules directory, parses rule definitions, validates them, and creates Rule Agents for execution.
 
 Each rule should be defined in this way:
 ```
@@ -18,7 +18,7 @@ recommendation:
     message: "Increase heater output by 10%"
 ```
 
-The required fields include `name`, `enabled`, `target`, `condition`, and `recommendation`. Every rule must define the recommendation that should be presented to an operator when a violation occurs.
+The required fields include `name`, `enabled`, `target`, `condition`, and `recommendation`. Every rule must define the recommendation message used when an alert is generated.
 
 #### Rule Field Definitions
 `name`:
@@ -36,7 +36,7 @@ The required fields include `name`, `enabled`, `target`, `condition`, and `recom
 `condition`:
  - Required field
  - Values: {`above`, `below`, `equals`}
- - Comparison value type depends on the target variable
+ - Numeric comparison definition. Supported operators are above, below, and equals, each implemented as numeric (float64) comparisons.
 
 `severity`:
  - Optional field that can provide the operator with more context
@@ -49,13 +49,11 @@ The required fields include `name`, `enabled`, `target`, `condition`, and `recom
  - Message value should be a `string`
 
 
-### Memory Namespaces
-Shared Memory serves as the primary communication layer between Device Agents and Rule Agents. Shared Memory ensures all Rule Agents evaluate the same snapshot of process data during a scan cycle and avoids repeated Historian SQL queries across multiple agents. Data is organized into logical namespaces to separate process state, rule evaluation results, and operator recommendations.
-
-Device Agents refresh process values from the Historian SQL database during each scan cycle and publish the latest state into Shared Memory. Shared Memory should be considered a runtime cache of the most recent process state rather than a long-term data store.
+### Shared Memory
+Shared Memory is an in-memory key/value store used by the Runtime and Interpreter to maintain the latest process state during rule evaluation. Process values loaded from the Historian are stored using the process.* namespace. These values are then used as inputs during rule evaluation.
 
 #### Process State
-The process.* namespace contains real-time equipment and process values published by Device Agents.
+The process.* namespace contains process values loaded from the Historian database.
 
 Naming follows the pattern: `process.<DeviceType><DeviceID>.<Variable>`. For example, `process.Pump03.Flow`, `process.Tank01.Level`, `process.Valve02.Position`, etc..
 
@@ -70,72 +68,45 @@ process.Tank01.Temperature
 }
 ```
 
-#### Violation State
-The violation.* namespace contains active rule violations detected during evaluation.
-
-Naming follows the pattern: `violation.<ViolationID>`.
-
-Violations provide traceability into why a recommendation was generated.
+#### Alert State
+Rule Agents generate Alert objects in memory when rule conditions evaluate to true. These alerts are collected by the Runtime and forwarded to the Alert Publisher for delivery to connected clients.
 
 Example payload:
 ```
-violation.01
 {
-    "rule": "MaintainTankTemperature",
-    "target": "process.Tank01.Temperature",
-    "actualValue": 45,
-    "condition": {
-        "below": 50
-    },
-    "timestamp": "2026-07-17T10:15:00Z"
-}
-```
-
-A violation represents a rule condition that has evaluated to true and may result in one or more recommendations being generated.
-
-#### Recommendation State
-The recommendation.* namespace contains actions recommended by Rule Agents.
-
-Naming follows the pattern: `recommendation.<RecommendationID>`.
-
-Recommendations are intended for operator review and do not directly affect equipment operation.
-
-Example payload:
-```
-recommendation.001
-{
-    "rule": "MaintainTankTemperature",
-    "target": "process.Tank01.Temperature",
-    "message": "Increase heater output by 10%",
-    "severity": "warning",
-    "timestamp": "2026-07-17T10:15:00Z"
+      "rule": "MaintainTankTemperature",
+      "target": "process.Tank01.Temperature",
+      "severity": "warning",
+      "message": "Increase heater output by 10%"
 }
 ```
 
 ### Shared Memory Contract
 To prevent conflicting writes and establish clear responsibility boundaries, each agent type owns specific memory domains.
 
-#### Device Agents
-Device Agents are allowed to write:
+#### Runtime
+The Runtime is responsible for:
 
-    process.*
-
-Device Agents are responsible for reading process data, publishing current process state, and updating equipment variables. Device Agents do not evaluate rules or generate recommendations.
+      Loading rule definitions from the local rules directory
+      Creating and registering Rule Agents
+      Querying process values from the Historian SQLite database
+      Coordinating rule execution
+      Maintaining Shared Memory state
+      Publishing generated alerts to the server
 
 #### Rule Agents
-Rule Agents are allowed to write:
+Rule Agents are responsible for:
 
-    violation.*
-    recommendation.*
-
-Rule Agents are responsible for evaluating user-defined rules, identifying violations, and generating recommendations. Rule definitions are loaded by the Runtime from Blob Storage and supplied to Rule Agents during creation.
+      Reading required process values from the Shared Memory
+      Evaluating rule conditions
+      Generating Alert objects when conditions are met
 
 ### Rule Agent Lifecycle
-The Runtime dynamically creates Rule Agents from rule definitions stored in Blob Storage.
+The Runtime dynamically creates Rule Agents from rule definitions stored in the local rules directory.
 
 Startup:
 ```
-Blob Storage
+Local Rules (*.yaml)
       ↓
 Load Rule Definitions
       ↓
@@ -148,59 +119,62 @@ Register Agent
 
 Scan Cycle:
 ```
-Historian SQL
+Historian SQLite
       ↓
-Device Agents
+Load Process Values
       ↓
 Shared Memory
       ↓
 Rule Agents
       ↓
-Evaluate Rules
+Evaluate Conditions
       ↓
-Create Violations
+Generate Alerts
       ↓
-Create Recommendations
+Alert Publisher
 ```
 
-At startup, the runtime should read blob storage, load rule definitions, and create rule agents. During each scan cycle, Device Agents retrieve the latest process values from the Historian SQL database and publish them to Shared Memory. Rule Agents then evaluate their rules against the current process state stored in Shared Memory. If there's a violation, one should be created in shared memory followed by a new recommendation.
+At startup, the Runtime loads rule definitions from the local rules directory, validates them, and creates Rule Agents. During each scan cycle, process values are loaded from the Historian and stored in Shared Memory. Rule Agents evaluate rule conditions against the current process state and generate Alert objects when conditions are satisfied. Generated alerts are then published to connected clients through the server.
 
 ### Runtime Responsibilities
-The Runtime is responsible for loading rule definitions from Blob Storage, validating rule schemas, creating and registering Rule Agents, managing agent lifecycle, and coordinating Device Agent and Rule Agent scan cycles.
+The Runtime is responsible for loading rule definitions from the local rules directory, validating rule schemas, creating and registering Rule Agents, maintaining shared process state, coordinating rule execution, collecting generated alerts, and publishing alerts to the server layer.
 
 ### Historian Integration Design
-The Historian SQL database is the source of process data. Device Agents are responsible for querying the Historian and loading the latest process values into Shared Memory during each execution cycle.
+The Historian SQLite database is the source of process data. During execution, process values are loaded from the Historian and written into Shared Memory for use during rule evaluation. No dedicated Device Agent layer currently exists in the implementation.
 
 ### Overall Architecture
 ```
-              Blob Storage
-                    │
-                    ▼
-            Rule Definitions
-                    │
-                    ▼
-                 Runtime
-                    │
-        ┌───────────┴───────────┐
-        │                       │
-        ▼                       ▼
- Device Agents            Rule Agents
-        │                       │
-        │                       ▼
-        │                 Violations
-        │                       │
-        │                       ▼
-        │               Recommendations
-        │                       │
-        ▼                       ▼
-     Shared Memory ────────> Operator
-        ▲
-        │
-        ▼
-    Historian SQL
+           Local Rules (*.yaml)
+                   │
+                   ▼
+             Rule Loader
+                   │
+                   ▼
+                Runtime
+                   │
+       ┌───────────┴───────────┐
+       │                       │
+       ▼                       ▼
+  Rule Agents            Historian SQLite
+       │                (LoadTimestamp)
+       │                       │
+       └───────────┬───────────┘
+                   ▼
+              Interpreter
+                   │
+                   │
+       ┌───────────┴───────────┐
+       ▼                       ▼
+ Shared Memory              Alerts
+(process.* keys)      (in-memory objects)
+       │                       │
+       └───────────┬───────────┘
+                   ▼
+            Alert Publisher
+                   │
+                   ▼
+             HTTP/SSE Server
+                   │
+                   ▼
+               Operator UI
 ```
-
-The YAML/JSON rule parser
-The RuleDefinition model
-The Shared Memory interfaces
-The Runtime logic that creates Rule Agents from Blob-loaded definitions

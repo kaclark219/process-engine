@@ -1,12 +1,14 @@
 package loader
 
-import ("os"
+import ("fmt"
+        "os"
 		"path/filepath"
 		"process-engine/internal/agents")
 
 
 func LoadRuleAgents(rulesDir string) ([]agents.Agent, error) {
     var agentsList []agents.Agent
+    seenRuleNames := map[string]string{}
 
     entries, err := os.ReadDir(rulesDir)
     if err != nil {
@@ -17,6 +19,13 @@ func LoadRuleAgents(rulesDir string) ([]agents.Agent, error) {
             continue
         }
         rulePath := filepath.Join(rulesDir, entry.Name())
+
+		rule := agents.ProcessRule(rulePath)
+		if existingPath, exists := seenRuleNames[rule.Name]; exists {
+			return nil, fmt.Errorf("rule name %q must be unique (found in %s and %s)", rule.Name, existingPath, rulePath)
+		}
+		seenRuleNames[rule.Name] = rulePath
+
         agentsList = append(
             agentsList,
             agents.NewRuleAgent(entry.Name(), rulePath),

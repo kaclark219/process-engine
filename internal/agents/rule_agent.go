@@ -3,7 +3,10 @@ package agents
 import ("fmt"
 		"os"
 		"process-engine/internal/memory"
+		"regexp"
 		"gopkg.in/yaml.v3")
+
+var processTargetPattern = regexp.MustCompile(`^process\.[A-Za-z0-9_]+\.[A-Za-z0-9_]+$`)
 
 type RuleAgent struct {
 	*BaseAgent
@@ -38,15 +41,30 @@ func ProcessRule(rule_path string) Rule {
 	if rule.Name == "" {
 		panic("Rule validation failed: name is required")
 	}
+	if rule.Enabled == nil {
+		panic("Rule validation failed: enabled is required")
+	}
 	if rule.Target == "" {
 		panic("Rule validation failed: target is required")
+	}
+	if !processTargetPattern.MatchString(rule.Target) {
+		panic("Rule validation failed: target must match process.<DeviceType><DeviceID>.<Variable>")
 	}
 	if rule.Recommendation.Message == "" {
 		panic("Rule validation failed: recommendation.message is required")
 	}
-	valid_condition := rule.Condition.Above != nil || rule.Condition.Below != nil || rule.Condition.Equals != nil
-	if !valid_condition {
-		panic("Rule validation failed: condition must define above, below, or equals")
+	conditionCount := 0
+	if rule.Condition.Above != nil {
+		conditionCount++
+	}
+	if rule.Condition.Below != nil {
+		conditionCount++
+	}
+	if rule.Condition.Equals != nil {
+		conditionCount++
+	}
+	if conditionCount != 1 {
+		panic("Rule validation failed: condition must define exactly one of above, below, or equals")
 	}
 	valid_severity := rule.Severity == "advisory" || rule.Severity == "warning" || rule.Severity == "emergency"
 	if !valid_severity {
@@ -57,6 +75,10 @@ func ProcessRule(rule_path string) Rule {
 }
 
 func (a *RuleAgent) Scan(memory *memory.Memory) []Alert {
+	if !a.rule.IsEnabled() {
+		return nil
+	}
+
 	// evaluate rule against current memory state
 	target := a.rule.Target
 	value := memory.Get(target)
@@ -105,7 +127,7 @@ func (a *RuleAgent) Scan(memory *memory.Memory) []Alert {
 
 func PrintRule(a RuleAgent) {
 	fmt.Println("Name:", a.rule.Name)
-	fmt.Println("Enabled:", a.rule.Enabled)
+	fmt.Println("Enabled:", a.rule.IsEnabled())
 	fmt.Println("Target:", a.rule.Target)
 	if a.rule.Condition.Above != nil {
 		fmt.Println("Condition Above:", *a.rule.Condition.Above)

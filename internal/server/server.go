@@ -120,7 +120,7 @@ func (s *Server) handleCreateRule(w http.ResponseWriter, r *http.Request) {
 	// create rule
 	rule := agents.Rule{
 		Name: name,
-		Enabled: enabled,
+		Enabled: &enabled,
 		Target: target,
 		Condition: condition,
 		Severity: severity,
@@ -195,7 +195,7 @@ func (s *Server) handleAlerts(w http.ResponseWriter, r *http.Request) {
 func (s *Server) writeRuleYAML(filePath string, rule agents.Rule) error {
 	yamlContent := fmt.Sprintf("name: %s\n\nenabled: %v\n\ntarget: %s\n\ncondition:\n    %s: %v\n\nseverity: %s\n\nrecommendation:\n    message: %q\n",
 		rule.Name,
-		rule.Enabled,
+		rule.IsEnabled(),
 		rule.Target,
 		getConditionKey(&rule.Condition),
 		getConditionValue(&rule.Condition),

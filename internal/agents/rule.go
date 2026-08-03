@@ -2,7 +2,7 @@ package agents
 
 type Rule struct {
 	Name string `yaml:"name"`
-	Enabled bool `yaml:"enabled"`
+	Enabled *bool `yaml:"enabled"`
 	Target string `yaml:"target"`
 	Condition Condition `yaml:"condition"`
 	Severity string `yaml:"severity"`
@@ -26,4 +26,11 @@ type Alert struct {
 	Value float64
 	Condition string
 	Message string
+}
+
+func (r Rule) IsEnabled() bool {
+	if r.Enabled == nil {
+		return false
+	}
+	return *r.Enabled
 }
